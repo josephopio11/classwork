@@ -1,167 +1,186 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  FileText,
-  FileImage,
-  FileSpreadsheet,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
   FileArchive,
-  FileIcon as FilePdf,
   FileCode,
+  FileImage,
+  FileIcon as FilePdf,
+  FileSpreadsheet,
+  FileText,
   Trash2,
   Upload,
-} from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Separator } from "@/components/ui/separator"
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 type Document = {
-  id: string
-  name: string
-  type: "pdf" | "doc" | "xls" | "img" | "zip" | "code"
-  size: string
-  url: string
-}
+  id: string;
+  name: string;
+  type: "pdf" | "doc" | "xls" | "img" | "zip" | "code";
+  size: string;
+  url: string;
+};
 
 const getDocumentIcon = (type: Document["type"]) => {
   switch (type) {
     case "pdf":
-      return <FilePdf className="h-6 w-6 text-red-500" />
+      return <FilePdf className="h-6 w-6 text-red-500" />;
     case "doc":
-      return <FileText className="h-6 w-6 text-blue-500" />
+      return <FileText className="h-6 w-6 text-blue-500" />;
     case "xls":
-      return <FileSpreadsheet className="h-6 w-6 text-green-500" />
+      return <FileSpreadsheet className="h-6 w-6 text-green-500" />;
     case "img":
-      return <FileImage className="h-6 w-6 text-purple-500" />
+      return <FileImage className="h-6 w-6 text-purple-500" />;
     case "zip":
-      return <FileArchive className="h-6 w-6 text-yellow-500" />
+      return <FileArchive className="h-6 w-6 text-yellow-500" />;
     case "code":
-      return <FileCode className="h-6 w-6 text-gray-500" />
+      return <FileCode className="h-6 w-6 text-gray-500" />;
     default:
-      return <FileText className="h-6 w-6 text-gray-500" />
+      return <FileText className="h-6 w-6 text-gray-500" />;
   }
-}
+};
 
 export default function AdminPage() {
-  const [documents, setDocuments] = useState<Document[]>([])
-  const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Fetch documents
   const fetchDocuments = async () => {
     try {
-      setLoading(true)
-      const response = await fetch("/api/documents")
+      setLoading(true);
+      const response = await fetch("/api/documents");
       if (!response.ok) {
-        throw new Error("Failed to fetch documents")
+        toast.error("Failed to fetch documents");
+        throw new Error("Failed to fetch documents");
       }
-      const data = await response.json()
-      setDocuments(data.documents || [])
-      setError(null)
+      const data = await response.json();
+      setDocuments(data.documents || []);
+      setError(null);
     } catch (err) {
-      setError("Failed to load documents")
-      console.error(err)
+      setError("Failed to load documents");
+      toast.error("Failed to load documents");
+      console.error(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchDocuments()
-  }, [])
+    fetchDocuments();
+  }, []);
 
   // Handle file upload
   const handleUpload = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    const form = event.currentTarget
-    const fileInput = form.elements.namedItem("file") as HTMLInputElement
+    const form = event.currentTarget;
+    const fileInput = form.elements.namedItem("file") as HTMLInputElement;
 
     if (!fileInput.files || fileInput.files.length === 0) {
-      setError("Please select a file to upload")
-      return
+      setError("Please select a file to upload");
+      toast.error("Please select a file to upload");
+      return;
     }
 
-    const file = fileInput.files[0]
-    const formData = new FormData()
-    formData.append("file", file)
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
 
     try {
-      setUploading(true)
-      setError(null)
+      setUploading(true);
+      toast.info("Uploading file...");
+      setError(null);
 
       const response = await fetch("/api/documents", {
         method: "POST",
         body: formData,
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to upload file")
+        const data = await response.json();
+        toast.error(data.error || "Failed to upload file");
+        throw new Error(data.error || "Failed to upload file");
       }
 
       // Show success message
-      setSuccess(`File "${file.name}" uploaded successfully`)
+      setSuccess(`File "${file.name}" uploaded successfully`);
+      toast.success(`File "${file.name}" uploaded successfully`);
 
       // Reset form
-      form.reset()
+      form.reset();
 
       // Refresh document list
-      fetchDocuments()
+      fetchDocuments();
     } catch (err) {
-      console.error("Upload error:", err)
-      setError(err instanceof Error ? err.message : "Failed to upload file")
+      console.error("Upload error:", err);
+      toast.error("Failed to upload file");
+      setError(err instanceof Error ? err.message : "Failed to upload file");
     } finally {
-      setUploading(false)
+      setUploading(false);
 
       // Clear success message after 3 seconds
       if (success) {
-        setTimeout(() => setSuccess(null), 3000)
+        setTimeout(() => setSuccess(null), 3000);
       }
     }
-  }
+  };
 
   // Handle file deletion
   const handleDelete = async (filename: string) => {
     if (!confirm(`Are you sure you want to delete "${filename}"?`)) {
-      return
+      return;
     }
 
     try {
-      setError(null)
+      setError(null);
 
-      const response = await fetch(`/api/documents?filename=${encodeURIComponent(filename)}`, {
-        method: "DELETE",
-      })
+      const response = await fetch(
+        `/api/documents?filename=${encodeURIComponent(filename)}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to delete file")
+        const data = await response.json();
+        toast.error(data.error || "Failed to delete file");
+        throw new Error(data.error || "Failed to delete file");
       }
 
       // Show success message
-      setSuccess(`File "${filename}" deleted successfully`)
+      setSuccess(`File "${filename}" deleted successfully`);
+      toast.success(`File "${filename}" deleted successfully`);
 
       // Refresh document list
-      fetchDocuments()
+      fetchDocuments();
     } catch (err) {
-      console.error("Delete error:", err)
-      setError(err instanceof Error ? err.message : "Failed to delete file")
+      console.error("Delete error:", err);
+      setError(err instanceof Error ? err.message : "Failed to delete file");
     } finally {
       // Clear success message after 3 seconds
       if (success) {
-        setTimeout(() => setSuccess(null), 3000)
+        setTimeout(() => setSuccess(null), 3000);
       }
     }
-  }
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -184,7 +203,9 @@ export default function AdminPage() {
       <Card className="mb-8">
         <CardHeader>
           <CardTitle>Upload New Document</CardTitle>
-          <CardDescription>Upload class work documents for students to download</CardDescription>
+          <CardDescription>
+            Upload class work documents for students to download
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUpload} className="space-y-4">
@@ -219,7 +240,9 @@ export default function AdminPage() {
           {loading ? (
             <div className="text-center py-4">Loading documents...</div>
           ) : documents.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">No documents uploaded yet</div>
+            <div className="text-center py-4 text-muted-foreground">
+              No documents uploaded yet
+            </div>
           ) : (
             <div className="space-y-2">
               {documents.map((document, index) => (
@@ -254,6 +277,5 @@ export default function AdminPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-
