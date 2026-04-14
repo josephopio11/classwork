@@ -25,13 +25,9 @@ export const dynamic = () => {
 
 export default function DateDisplay() {
   const [liveTime, setLiveTime] = useState("");
+  const [liveDate, setLiveDate] = useState("");
 
   // Get current date in the format "Month Day, Year" (e.g., "March 23, 2025")
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -41,6 +37,15 @@ export default function DateDisplay() {
         second: "numeric",
         hour12: true,
       });
+
+      const currentDate = new Date().toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+
+      setLiveDate(currentDate);
+
       setLiveTime(currentTime);
     }, 1000);
     return () => clearInterval(interval);
@@ -48,7 +53,7 @@ export default function DateDisplay() {
 
   return (
     <span>
-      {currentDate} - <span className="font-mono font-light"> {liveTime}</span>
+      {liveDate} - <span className="font-mono font-light"> {liveTime}</span>
     </span>
   );
 }

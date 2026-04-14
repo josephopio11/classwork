@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +23,8 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -56,6 +56,7 @@ const getDocumentIcon = (type: Document["type"]) => {
 };
 
 export default function AdminPage() {
+  const router = useRouter();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -165,6 +166,7 @@ export default function AdminPage() {
         throw new Error(data.error || "Failed to delete file");
       }
 
+      router.refresh();
       // Show success message
       setSuccess(`File "${filename}" deleted successfully`);
       toast.success(`File "${filename}" deleted successfully`);
