@@ -48,7 +48,7 @@ export default function DateDisplay() {
 
   return (
     <span>
-      {currentDate} - {liveTime}
+      {currentDate} - <span className="font-mono font-light"> {liveTime}</span>
     </span>
   );
 }
